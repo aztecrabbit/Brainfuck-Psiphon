@@ -1,0 +1,8 @@
+# Whitelist Request
+#
+# *:*
+# *:80
+# akamai:*
+# akamai:80
+
+akamai.net:80
