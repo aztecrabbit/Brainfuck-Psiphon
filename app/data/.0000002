@@ -1,7 +1,4 @@
 {
   "core": 4,
-  "kuota_data_limit": 4000000,
-
-  "proxyrotator_port": 3080,
-  "domainfronting_port": 8080
+  "kuota_data_limit": 4000000
 }

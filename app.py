@@ -3,11 +3,23 @@ import app
 import sys
 import json
 import time
+import argparse
 import threading
 import subprocess
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-c', '--core', help='how many core running (min 1, max 16)', type=int)
+    arguments = parser.parse_args()
+    arguments.core = 0 if arguments.core is None else arguments.core
+
+    app.banners()
+
     config = app.config()
+
+    if config.system_machine not in config.files_psiphon_tunnel_core:
+        log('This machine ({}) not available at this time!'.format(config.system_machine), color='[R1]')
+        return
 
     if config.system_machine in config.system_machine_using_redsocks:
         if os.getuid() != 0:
@@ -24,10 +36,10 @@ def main():
     redsocks = app.redsocks(config.is_system_machine_using_redsocks())
     redsocks.start()
     
-    for i in range(int(config.core)):
+    for i in range(int(arguments.core if arguments.core > 0 and arguments.core <= 16 else config.core)):
         port = 3081 + i
         app.proxies.append(['127.0.0.1', port])
-        app.psiphon('storage/psiphon/psiphon-tunnel-core -config storage/psiphon/{port}/config.json', port, config.kuota_data_limit).start()
+        app.psiphon('{} -config storage/psiphon/{}/config.json'.format(app.real_path(config.files_psiphon_tunnel_core[config.system_machine][1]), port), port, config.kuota_data_limit).start()
 
     try:
         domainfronting = app.domainfronting(('127.0.0.1', config.domainfronting_port), app.domainfronting_handler)
@@ -39,7 +51,7 @@ def main():
     except OSError:
         app.psiphon_stop.append(1)
         redsocks.stop()
-        app.log('Port {} used by another programs', color='[R1]'.format(config.domainfronting_port))
+        app.log('Port {} used by another programs'.format(config.domainfronting_port), color='[R1]')
         app.log('Ctrl-C to exit')
     except KeyboardInterrupt:
         app.psiphon_stop.append(1)

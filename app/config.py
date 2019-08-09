@@ -1,5 +1,4 @@
 import os
-import stat
 import json
 import shutil
 import platform
@@ -29,6 +28,8 @@ class config(object):
 
         self.system_machine = sysconfig.get_platform()
         self.system_platform = platform.system()
+        self.proxyrotator_port = 3080
+        self.domainfronting_port = 8080
 
     def load_config(self):
         for x in self.files_config:
@@ -39,8 +40,6 @@ class config(object):
         config = json.loads(open(real_path(self.files_config['config'][1])).read())
         self.core = config['core']
         self.kuota_data_limit = config['kuota_data_limit']
-        self.proxyrotator_port = config['proxyrotator_port']
-        self.domainfronting_port = config['domainfronting_port']
 
         self.frontend_domains = process_to_host_port(open(real_path(self.files_config['frontend-domains'][1])).readlines())
         self.whitelist_requests = process_to_host_port(open(real_path(self.files_config['whitelist-requests'][1])).readlines())
@@ -62,8 +61,6 @@ class config(object):
             shutil.copyfile(source, destination)
             if self.system_platform == 'Linux':
                 os.system('chmod +x {}'.format(destination))
-        else:
-            log('This machine ({}) not available at this time!', color='[R1]')
 
     def reset(self):
         files = []

@@ -6,7 +6,6 @@ from threading import RLock
 lock = RLock()
 proxies = []
 psiphon_stop = []
-global_variables = {}
 regex_host_port = r'([^/:]+(\.[^/:]+)?)(:([0-9*]+))?'
 
 def real_path(file_name):

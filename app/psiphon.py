@@ -11,7 +11,7 @@ class psiphon(threading.Thread):
         super(psiphon, self).__init__()
 
         self.kuota_data_limit = kuota_data_limit
-        self.command = command.format(port=port)
+        self.command = command
         self.port = port
 
         self.kuota_data = 0
