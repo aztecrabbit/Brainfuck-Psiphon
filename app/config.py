@@ -3,7 +3,6 @@ import json
 import shutil
 import platform
 import sysconfig
-from .log import log
 from .important import *
 
 class config(object):

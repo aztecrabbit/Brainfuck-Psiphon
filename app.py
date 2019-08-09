@@ -1,11 +1,7 @@
 import os
 import app
 import sys
-import json
-import time
 import argparse
-import threading
-import subprocess
 
 def main():
     parser = argparse.ArgumentParser()
