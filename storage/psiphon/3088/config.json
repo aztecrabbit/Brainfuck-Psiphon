@@ -10,5 +10,7 @@
   "EmitBytesTransferred": true,
 
   "DisableLocalHTTPProxy": true,
-  "LocalSocksProxyPort": 3088
+  "LocalSocksProxyPort": 3088,
+  
+  "EgressRegion": ""
 }
