@@ -5,7 +5,7 @@ import argparse
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', help='how many core running (min 1, max 16)', dest='core', type=int)
-    parser.add_argument('-r', help='reset exported file (all, config, data)', dest='reset', type=str)
+    parser.add_argument('-r', help='reset exported files (all, config, data, database)', dest='reset', type=str)
     arguments = parser.parse_args()
 
     app.banners()
