@@ -13,7 +13,9 @@ class redsocks(object):
 
         redsocks_config = \
         '''
-echo 'base {
+echo '
+
+base {
     log_debug = off;
     log_info = off;
     log = "file:/var/log/redsocks.log";
@@ -33,7 +35,9 @@ redsocks {
 }
 
 // Auto generated from Brainfuck Tunnel Psiphon Version
-// (c) 2019 Aztec Rabbit.' > /etc/redsocks.conf
+// (c) 2019 Aztec Rabbit.
+
+' > /etc/redsocks.conf
         '''.strip()
 
         commands = \
