@@ -1,4 +1,5 @@
 {
   "core": 4,
-  "kuota_data_limit": 4000000
+  "kuota_data_limit": 4000000,
+  "force_use_redsocks": false
 }

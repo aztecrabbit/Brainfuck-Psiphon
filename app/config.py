@@ -3,6 +3,7 @@ import json
 import shutil
 import platform
 import sysconfig
+from .log import log
 from .important import *
 
 class config(object):
@@ -30,21 +31,35 @@ class config(object):
         self.proxyrotator_port = 3080
         self.domainfronting_port = 8080
 
-    def load_config(self):
-        for x in self.files_config:
-            source, destination = [real_path(data) for data in self.files_config[x]]
-            if not os.path.exists(destination):
-                shutil.copyfile(source, destination)
+    def log(self, value, color='[G1]'):
+        log(value, color=color)
 
-        config = json.loads(open(real_path(self.files_config['config'][1])).read())
-        self.core = config['core']
-        self.kuota_data_limit = config['kuota_data_limit']
+    def load_config(self):
+        while True:
+            try:
+                for x in self.files_config:
+                    source, destination = [real_path(data) for data in self.files_config[x]]
+                    if not os.path.exists(destination):
+                        shutil.copyfile(source, destination)
+
+                config = json.loads(open(real_path(self.files_config['config'][1])).read())
+                self.core = config['core']
+                self.kuota_data_limit = config['kuota_data_limit']
+                self.force_use_redsocks = config['force_use_redsocks']
+            except KeyError as e:
+                self.log('Resetting Config to Default Settings')
+                self.reset('config')
+                self.log('Resetting Config to Default Settings Complete\n')
+            else: break
 
         self.frontend_domains = process_to_host_port(open(real_path(self.files_config['frontend-domains'][1])).readlines())
         self.whitelist_requests = process_to_host_port(open(real_path(self.files_config['whitelist-requests'][1])).readlines())
 
-    def is_system_machine_using_redsocks(self):
-        return True if self.system_machine in self.system_machine_using_redsocks else False
+    def user_is_superuser(self):
+        return True if os.getuid() == 0 else False
+
+    def is_redsocks_enabled(self):
+        return True if self.system_machine in self.system_machine_using_redsocks or self.force_use_redsocks == True else False
 
     def load_psiphon_database(self):
         source, destination = [real_path(data) for data in self.file_psiphon_database]
@@ -61,17 +76,20 @@ class config(object):
             if self.system_platform == 'Linux':
                 os.system('chmod +x {}'.format(destination))
 
-    def reset(self):
+    def reset(self, exported_file=''):
+        exported_file = exported_file if exported_file in ['config', 'data'] else 'all'
         files = []
 
-        for x in self.files_config:
-            files.append(self.files_config[x][1])
+        if exported_file == 'all' or exported_file == 'config':
+            for x in self.files_config:
+                files.append(self.files_config[x][1])
 
-        for i in range(16):
-            files.append(self.file_psiphon_database[1].format(3081 + i))
+        if exported_file == 'all' or exported_file == 'data':
+            for i in range(16):
+                files.append(self.file_psiphon_database[1].format(3081 + i))
 
-        for x in self.files_psiphon_tunnel_core:
-            files.append(self.files_psiphon_tunnel_core[x][1])
+            for x in self.files_psiphon_tunnel_core:
+                files.append(self.files_psiphon_tunnel_core[x][1])
 
         for x in files:
             try:
