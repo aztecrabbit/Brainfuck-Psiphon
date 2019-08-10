@@ -14,7 +14,7 @@ def main():
     config = app.config()
 
     if config.system_machine not in config.files_psiphon_tunnel_core:
-        log('This machine ({}) not available at this time!'.format(config.system_machine), color='[R1]')
+        app.log('This machine ({}) not available at this time!\n'.format(config.system_machine), color='[R1]')
         return
 
     if config.system_machine in config.system_machine_using_redsocks:

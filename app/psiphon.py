@@ -47,6 +47,7 @@ class psiphon(threading.Thread):
         while True:
             try:
                 self.kuota_data = 0
+                self.reconnecting_color = '[G1]'
                 process = subprocess.Popen(self.command.split(' '), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                 for line in process.stdout:
                     if len(psiphon_stop) >= 1:
@@ -75,7 +76,9 @@ class psiphon(threading.Thread):
 
                     elif info == 'Alert':
                         if 'SOCKS proxy accept error' in message:
-                            if not self.connected: break
+                            if not self.connected:
+                                self.reconnecting_color = '[P1]'
+                                break
 
                         elif 'meek round trip failed' in message:
                             if self.connected: break
@@ -89,8 +92,8 @@ class psiphon(threading.Thread):
                          'tactics request failed' in message or \
                          'unexpected status code:' in message or \
                          'meek connection is closed' in message or \
-                         'meek connection has closed' in message or \
                          'psiphon.(*MeekConn).relay' in message or \
+                         'meek connection has closed' in message or \
                          'response status: 403 Forbidden' in message or \
                          'making proxy request: unexpected EOF' in message or \
                          'tunnel.dialTunnel: dialConn is not a Closer' in message or \
@@ -106,7 +109,7 @@ class psiphon(threading.Thread):
                          'No address associated with hostname' in message or \
                          'controller shutdown due to component failure' in message or \
                          'tunnel failed:' in message:
-                            self.log('Connection closed', color='[R1]')
+                            self.reconnecting_color = '[R1]'
                             break
 
                         else: self.log(line, color='[R1]')
@@ -126,7 +129,7 @@ class psiphon(threading.Thread):
                     process.kill()
                     if self.connected:
                         self.connected = False
-                    self.log('Reconnecting ({})'.format(self.size(self.kuota_data)))
+                    self.log('Reconnecting ({})'.format(self.size(self.kuota_data)), color=self.reconnecting_color)
                 except Exception as exception:
                     self.log('Stopped', color='[R1]')
                     break

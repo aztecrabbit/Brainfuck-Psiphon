@@ -73,9 +73,9 @@ class config(object):
         for x in self.files_psiphon_tunnel_core:
             files.append(self.files_psiphon_tunnel_core[x][1])
 
-        for file in files:
+        for x in files:
             try:
-                os.remove(real_path(file))
+                os.remove(real_path(x))
             except: continue
 
     def load(self):

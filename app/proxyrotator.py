@@ -131,12 +131,11 @@ class proxyrotator_handler(socketserver.StreamRequestHandler):
                 host = struct.unpack('!I', socket.inet_aton(bind_address[0]))[0]
                 port = bind_address[1]
                 data = struct.pack('!BBBBIH', self.server.socks_version, 0, 0, 1, host, port)
-
-                break
             except socks.GeneralProxyError:
                 pass
             except socks.ProxyConnectionError:
                 pass
+            else: break
 
         self.connection.sendall(data)
 
