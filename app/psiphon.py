@@ -7,17 +7,20 @@ from .important import *
 from .log import log, log_replace
 
 class psiphon(threading.Thread):
-    def __init__(self, command, port, kuota_data_limit):
+    def __init__(self, command, port, kuota_data_limit, multi_tunnel_enabled):
         super(psiphon, self).__init__()
 
+        self.multi_tunnel_enabled = multi_tunnel_enabled
         self.kuota_data_limit = kuota_data_limit
         self.command = command
         self.port = port
 
+        self.tunnels = 2 if self.multi_tunnel_enabled else 1
         self.kuota_data = {}
         self.kuota_data_all = 0
         self.kuota_data_limit_count = 0
         self.force_stop = False
+
         self.daemon = True
 
     def log(self, value, color='[G1]'):
@@ -36,14 +39,12 @@ class psiphon(threading.Thread):
         self.kuota_data[id] += sent + received
         self.kuota_data_all += sent + received
 
-        limit_count = 0
         for x in self.kuota_data:
             if self.kuota_data_limit > 0 and self.kuota_data[x] >= self.kuota_data_limit:
-                limit_count += 1
                 if sent == 0 and received <= 20000:
                     self.kuota_data_limit_count += 1
 
-        if len(self.kuota_data) == limit_count or self.kuota_data_limit_count >= 3:
+        if self.kuota_data_limit_count >= 3:
             return False
 
         return True
@@ -73,15 +74,16 @@ class psiphon(threading.Thread):
                         if not self.check_kuota_data(id, sent, received):
                             break
                         ids = ''
-                        for x in self.kuota_data:
-                            ids += '({}) '.format(self.size(self.kuota_data[x]))
+                        if self.multi_tunnel_enabled:
+                            for x in self.kuota_data:
+                                ids += '({}) '.format(self.size(self.kuota_data[x]))
                         self.log_replace('{} ({}) {}'.format(self.port, self.size(self.kuota_data_all), ids))
 
                     elif info == 'ActiveTunnel':
                         self.connected += 1
                         self.kuota_data[line['data']['diagnosticID']] = 0
-                        if self.connected == 2:
-                            self.log('Connected                ', color='[Y1]')
+                        if self.connected == self.tunnels:
+                            self.log('Connected' + ' ' * 16, color='[Y1]')
 
                     elif info == 'ConnectingServer':
                         continue

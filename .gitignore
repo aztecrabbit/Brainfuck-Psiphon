@@ -13,6 +13,7 @@ storage/psiphon/psiphon-tunnel-core.exe
 !.0000004
 !.0000005
 !storage/psiphon/*/config.json
+!storage/psiphon/*/config-multi-tunnel.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

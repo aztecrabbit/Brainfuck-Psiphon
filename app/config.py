@@ -26,6 +26,9 @@ class config(object):
         self.system_machine_using_redsocks = [
             'linux-x86_64'
         ]
+        self.system_machine_using_multi_tunnel = [
+            'linux-x86_64'
+        ]
 
         self.system_machine = sysconfig.get_platform()
         self.system_platform = platform.system()
@@ -40,7 +43,10 @@ class config(object):
         return True if os.getuid() == 0 else False
 
     def is_redsocks_enabled(self):
-        return True if self.system_machine in self.system_machine_using_redsocks or self.force_use_redsocks == True else False
+        return True if self.system_machine in self.system_machine_using_redsocks or self.force_use_redsocks else False
+
+    def is_multi_tunnel_enabled(self):
+        return True if self.system_machine in self.system_machine_using_multi_tunnel or self.force_use_multi_tunnel else False
 
     def load_config(self):
         while True:
@@ -53,6 +59,7 @@ class config(object):
                 config = json.loads(open(real_path(self.files_config['config'][1])).read())
                 self.core = config['core']
                 self.force_use_redsocks = config['force_use_redsocks']
+                self.force_use_multi_tunnel = config['force_use_multi_tunnel']
             except KeyError:
                 self.log('Resetting Config to Default Settings')
                 self.reset('config')

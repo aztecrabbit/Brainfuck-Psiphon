@@ -10,7 +10,6 @@
 
   "DisableLocalHTTPProxy": true,
   "LocalSocksProxyPort": 3089,
-  "TunnelPoolSize": 2,
   
   "EgressRegion": ""
 }

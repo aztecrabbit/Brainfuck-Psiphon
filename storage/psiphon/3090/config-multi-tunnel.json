@@ -1,5 +1,5 @@
 {
-  "DataStoreDirectory": "storage/psiphon/3082",
+  "DataStoreDirectory": "storage/psiphon/3090",
 
   "PropagationChannelId": "0000000000000000",
   "SponsorId": "0000000000000000",
@@ -9,7 +9,8 @@
   "EmitBytesTransferred": true,
 
   "DisableLocalHTTPProxy": true,
-  "LocalSocksProxyPort": 3082,
+  "LocalSocksProxyPort": 3090,
+  "TunnelPoolSize": 2,
   
   "EgressRegion": ""
 }

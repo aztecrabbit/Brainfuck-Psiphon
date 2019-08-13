@@ -1,4 +1,5 @@
 {
-  "core": 2,
-  "force_use_redsocks": false
+  "core": 4,
+  "force_use_redsocks": false,
+  "force_use_multi_tunnel": false
 }

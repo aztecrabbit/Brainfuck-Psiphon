@@ -43,7 +43,10 @@ def main():
     for i in range(int(arguments.core if arguments.core is not None and arguments.core > 0 and arguments.core <= 16 else config.core)):
         port = 3081 + i
         app.proxies.append(['127.0.0.1', port])
-        app.psiphon('{} -config storage/psiphon/{}/config.json'.format(app.real_path(config.files_psiphon_tunnel_core[config.system_machine][1]), port), port, config.kuota_data_limit).start()
+        app.psiphon(
+            '{} -config storage/psiphon/{}/{}'.format(app.real_path(config.files_psiphon_tunnel_core[config.system_machine][1]), port, 'config-multi-tunnel.json' if config.is_multi_tunnel_enabled() else 'config.json'),
+            port, config.kuota_data_limit, config.is_multi_tunnel_enabled()
+        ).start()
 
     try:
         domainfronting = app.domainfronting(('127.0.0.1', config.domainfronting_port), app.domainfronting_handler)
