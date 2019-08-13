@@ -16,6 +16,7 @@ class psiphon(threading.Thread):
 
         self.kuota_data = {}
         self.kuota_data_all = 0
+        self.kuota_data_limit_count = 0
         self.force_stop = False
         self.daemon = True
 
@@ -42,9 +43,11 @@ class psiphon(threading.Thread):
         for x in self.kuota_data:
             if self.kuota_data_limit > 0 and self.kuota_data[x] >= self.kuota_data_limit:
                 limit_count += 1
+                if sent == 0 and received <= 20000:
+                    self.kuota_data_limit_count += 1
             else: break
 
-        if len(self.kuota_data) == limit_count:
+        if len(self.kuota_data) == limit_count or self.kuota_data_limit_count >= 7:
             return False
 
         return True
@@ -59,6 +62,7 @@ class psiphon(threading.Thread):
                 self.kuota_data = {}
                 self.kuota_data_all = 0
                 self.reconnecting_color = '[G1]'
+                self.kuota_data_limit_count = 0
                 process = subprocess.Popen(self.command.split(' '), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                 for line in process.stdout:
                     if len(psiphon_stop) >= 1:
@@ -72,7 +76,7 @@ class psiphon(threading.Thread):
                         id, sent, received = line['data']['diagnosticID'], line['data']['sent'], line['data']['received']
                         if not self.check_kuota_data(id, sent, received):
                             break
-                        self.log_replace('{} ({}) ({}) ({})'.format(self.port, self.size(self.kuota_data_all), id, self.size(self.kuota_data[id])))
+                        self.log_replace('{} ({}) ({})'.format(self.port, self.size(self.kuota_data_all), self.size(self.kuota_data[id])))
 
                     elif info == 'Tunnels':
                         self.connected += 1
