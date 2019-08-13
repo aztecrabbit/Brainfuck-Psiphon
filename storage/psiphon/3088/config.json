@@ -5,12 +5,11 @@
   "SponsorId": "0000000000000000",
 
   "UpstreamProxyURL": "http://127.0.0.1:8080",
-  "UseIndistinguishableTLS": true,
-  "EmitDiagnosticNotices": true,
   "EmitBytesTransferred": true,
 
   "DisableLocalHTTPProxy": true,
   "LocalSocksProxyPort": 3088,
+  "TunnelPoolSize": 2,
   
   "EgressRegion": ""
 }

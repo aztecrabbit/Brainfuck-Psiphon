@@ -14,16 +14,16 @@ class psiphon(threading.Thread):
         self.command = command
         self.port = port
 
-        self.kuota_data = 0
+        self.kuota_data = {}
+        self.kuota_data_all = 0
         self.force_stop = False
-        self.connected = False
         self.daemon = True
 
     def log(self, value, color='[G1]'):
         log(value, status=self.port, color=color)
 
     def log_replace(self, value, color='[G1]'):
-        log_replace(value, status=self.port, color=color)
+        log_replace(value, color=color)
 
     def size(self, bytes, suffixes=['B', 'KB', 'MB', 'GB'], i=0):
         while bytes >= 1000 and i < len(suffixes) - 1:
@@ -31,12 +31,21 @@ class psiphon(threading.Thread):
 
         return '{:.3f} {}'.format(bytes, suffixes[i])
 
-    def check_kuota_data(self, received, sent):
-        self.kuota_data += received + sent
+    def check_kuota_data(self, id, sent, received):
+        if not self.kuota_data.get(id):
+            self.kuota_data[id] = 0
 
-        if self.kuota_data_limit > 0 and self.kuota_data >= self.kuota_data_limit:
-            if sent == 0 and received <= 20000:
-                return False
+        self.kuota_data[id] += sent + received
+        self.kuota_data_all += sent + received
+
+        limit_count = 0
+        for x in self.kuota_data:
+            if self.kuota_data_limit > 0 and self.kuota_data[x] >= self.kuota_data_limit:
+                limit_count += 1
+            else: break
+
+        if len(self.kuota_data) == limit_count:
+            return False
 
         return True
 
@@ -46,7 +55,9 @@ class psiphon(threading.Thread):
         self.log('Connecting')
         while True:
             try:
-                self.kuota_data = 0
+                self.connected = 0
+                self.kuota_data = {}
+                self.kuota_data_all = 0
                 self.reconnecting_color = '[G1]'
                 process = subprocess.Popen(self.command.split(' '), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                 for line in process.stdout:
@@ -58,61 +69,29 @@ class psiphon(threading.Thread):
                     if info in ['Info', 'Alert']: message = line['data']['message']
 
                     if info == 'BytesTransferred':
-                        if not self.check_kuota_data(line['data']['received'], line['data']['sent']):
+                        id, sent, received = line['data']['diagnosticID'], line['data']['sent'], line['data']['received']
+                        if not self.check_kuota_data(id, sent, received):
                             break
-                        self.log_replace(self.size(self.kuota_data))
+                        self.log_replace('{} ({}) ({}) ({})'.format(self.port, self.size(self.kuota_data_all), id, self.size(self.kuota_data[id])))
 
-                    elif info == 'ActiveTunnel':
-                        self.connected = True
-                        self.log('Connected', color='[Y1]')
+                    elif info == 'Tunnels':
+                        self.connected += 1
+                        if self.connected == 2:
+                            self.log('Connected', color='[Y1]')
 
-                    elif info == 'Info':
-                        if 'No connection could be made because the target machine actively refused it.' in message or \
-                         'Memory metrics at psiphon' in message or \
-                         'meek connection is closed' in message or \
-                         'meek connection has closed' in message or \
-                         'no such host' in message:
-                            continue
+                    elif info == 'UpstreamProxyError' or \
+                      info == 'ListeningSocksProxyPort' or \
+                      info == 'ClientRegion' or \
+                      info == 'NetworkID' or \
+                      info == 'Homepage' or \
+                      info == 'ServerTimestamp' or \
+                      info == 'AvailableEgressRegions' or \
+                      info == 'ClientUpgradeAvailable' or \
+                      info == 'ActiveAuthorizationIDs':
+                        continue
 
-                    elif info == 'Alert':
-                        if 'SOCKS proxy accept error' in message:
-                            if not self.connected:
-                                self.reconnecting_color = '[P1]'
-                                break
-
-                        elif 'meek round trip failed' in message:
-                            if self.connected: break
-
-                        elif 'A connection attempt failed because the connected party did not properly respond after a period of time' in message or \
-                         'context canceled' in message or \
-                         'API request rejected' in message or \
-                         'RemoteAddr returns nil' in message or \
-                         'network is unreachable' in message or \
-                         'close tunnel ssh error' in message or \
-                         'tactics request failed' in message or \
-                         'unexpected status code:' in message or \
-                         'meek connection is closed' in message or \
-                         'psiphon.(*MeekConn).relay' in message or \
-                         'meek connection has closed' in message or \
-                         'response status: 403 Forbidden' in message or \
-                         'making proxy request: unexpected EOF' in message or \
-                         'tunnel.dialTunnel: dialConn is not a Closer' in message or \
-                         'No connection could be made because the target machine actively refused it.' in message or \
-                         'no such host' in message:
-                            continue
-
-                        elif 'psiphon.(*Tunnel).sendSshKeepAlive' in message or \
-                         'meek read payload failed' in message or \
-                         'underlying conn is closed' in message or \
-                         'psiphon.(*Tunnel).Activate' in message or \
-                         'psiphon.(*Tunnel).SendAPIRequest' in message or \
-                         'No address associated with hostname' in message or \
-                         'controller shutdown due to component failure' in message or \
-                         'tunnel failed:' in message:
-                            self.reconnecting_color = '[R1]'
-                            break
-
-                        else: self.log(line, color='[R1]')
+                    else:
+                        self.log(line, color='[R1]')
             except json.decoder.JSONDecodeError:
                 self.force_stop = True
                 self.log(line.decode().strip(), color='[R1]')
@@ -129,7 +108,7 @@ class psiphon(threading.Thread):
                     process.kill()
                     if self.connected:
                         self.connected = False
-                    self.log('Reconnecting ({})'.format(self.size(self.kuota_data)), color=self.reconnecting_color)
+                    self.log('Reconnecting ({})'.format(self.size(self.kuota_data_all)), color=self.reconnecting_color)
                 except Exception as exception:
                     self.log('Stopped', color='[R1]')
                     break

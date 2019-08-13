@@ -29,6 +29,7 @@ class config(object):
 
         self.system_machine = sysconfig.get_platform()
         self.system_platform = platform.system()
+        self.kuota_data_limit = 4000000
         self.proxyrotator_port = 3080
         self.domainfronting_port = 8080
 
@@ -51,7 +52,6 @@ class config(object):
 
                 config = json.loads(open(real_path(self.files_config['config'][1])).read())
                 self.core = config['core']
-                self.kuota_data_limit = config['kuota_data_limit']
                 self.force_use_redsocks = config['force_use_redsocks']
             except KeyError:
                 self.log('Resetting Config to Default Settings')
@@ -65,7 +65,7 @@ class config(object):
     def load_psiphon_database(self):
         source, destination = [real_path(data) for data in self.file_psiphon_database]
         for i in range(16):
-            if not os.path.exists(destination):
+            if not os.path.exists(destination.format(3081 + i)):
                 shutil.copyfile(source, destination.format(3081 + i))
 
     def load_psiphon_tunnel_core(self):

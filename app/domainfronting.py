@@ -53,7 +53,7 @@ class domainfronting_handler(socketserver.BaseRequestHandler):
             self.server.close_request(self.request)
             return
 
-        if self.request_in_whitelist(socket_client_request_host, socket_client_request_port) == False:
+        if not self.request_in_whitelist(socket_client_request_host, socket_client_request_port):
             self.request.sendall('HTTP/1.1 403 Forbidden\r\n\r\n'.encode())
             self.server.close_request(self.request)
             return

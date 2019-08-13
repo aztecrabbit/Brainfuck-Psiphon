@@ -16,6 +16,7 @@ def main():
         app.log('Resetting Exported Files')
         config.reset(arguments.reset)
         app.log('Resetting Exported Files Complete\n'.format(arguments.reset))
+        return
 
     if config.system_machine not in config.files_psiphon_tunnel_core:
         app.log('This machine ({}) not available at this time!\n'.format(config.system_machine), color='[R1]')
