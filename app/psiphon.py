@@ -33,9 +33,6 @@ class psiphon(threading.Thread):
         return '{:.3f} {}'.format(bytes, suffixes[i])
 
     def check_kuota_data(self, id, sent, received):
-        if not self.kuota_data.get(id):
-            self.kuota_data[id] = 0
-
         self.kuota_data[id] += sent + received
         self.kuota_data_all += sent + received
 
@@ -45,9 +42,8 @@ class psiphon(threading.Thread):
                 limit_count += 1
                 if sent == 0 and received <= 20000:
                     self.kuota_data_limit_count += 1
-            else: break
 
-        if len(self.kuota_data) == limit_count or self.kuota_data_limit_count >= 7:
+        if len(self.kuota_data) == limit_count or self.kuota_data_limit_count >= 3:
             return False
 
         return True
@@ -68,30 +64,89 @@ class psiphon(threading.Thread):
                     if len(psiphon_stop) >= 1:
                         self.force_stop = True
                         break
+                    
                     line = json.loads(line.decode().strip() + '\r')
                     info = line['noticeType']
-                    if info in ['Info', 'Alert']: message = line['data']['message']
 
                     if info == 'BytesTransferred':
                         id, sent, received = line['data']['diagnosticID'], line['data']['sent'], line['data']['received']
                         if not self.check_kuota_data(id, sent, received):
                             break
-                        self.log_replace('{} ({}) ({})'.format(self.port, self.size(self.kuota_data_all), self.size(self.kuota_data[id])))
+                        ids = ''
+                        for x in self.kuota_data:
+                            ids += '({}) '.format(self.size(self.kuota_data[x]))
+                        self.log_replace('{} ({}) {}'.format(self.port, self.size(self.kuota_data_all), ids))
 
-                    elif info == 'Tunnels':
+                    elif info == 'ActiveTunnel':
                         self.connected += 1
+                        self.kuota_data[line['data']['diagnosticID']] = 0
                         if self.connected == 2:
-                            self.log('Connected', color='[Y1]')
+                            self.log('Connected                ', color='[Y1]')
 
-                    elif info == 'UpstreamProxyError' or \
-                      info == 'ListeningSocksProxyPort' or \
+                    elif info == 'ConnectingServer':
+                        continue
+
+                    elif info == 'ConnectedServer':
+                        continue
+
+                    elif info == 'Alert':
+                        message = line['data']['message']
+
+                        if 'SOCKS proxy accept error' in message:
+                            self.log('SOCKS proxy accept error ({})'.format('connected' if self.connected else 'disconnected'), color='[R1]')
+
+                        elif 'meek round trip failed' in message:
+                            if self.connected == 2:
+                                self.reconnecting_color = '[R1]'
+                                break
+
+                        elif 'A connection attempt failed because the connected party did not properly respond after a period of time' in message or \
+                         'context canceled' in message or \
+                         'API request rejected' in message or \
+                         'RemoteAddr returns nil' in message or \
+                         'network is unreachable' in message or \
+                         'close tunnel ssh error' in message or \
+                         'tactics request failed' in message or \
+                         'unexpected status code:' in message or \
+                         'meek connection is closed' in message or \
+                         'psiphon.(*MeekConn).relay' in message or \
+                         'meek connection has closed' in message or \
+                         'response status: 403 Forbidden' in message or \
+                         'making proxy request: unexpected EOF' in message or \
+                         'tunnel.dialTunnel: dialConn is not a Closer' in message or \
+                         'No connection could be made because the target machine actively refused it.' in message or \
+                         'no such host' in message:
+                            continue
+
+                        elif 'psiphon.(*Tunnel).sendSshKeepAlive' in message or \
+                         'meek read payload failed' in message or \
+                         'underlying conn is closed' in message or \
+                         'psiphon.(*Tunnel).Activate' in message or \
+                         'psiphon.(*Tunnel).SendAPIRequest' in message or \
+                         'No address associated with hostname' in message or \
+                         'controller shutdown due to component failure' in message or \
+                         'tunnel failed:' in message:
+                            self.reconnecting_color = '[R1]'
+                            break
+
+                    elif info == 'AvailableEgressRegions' or \
+                      info == 'UpstreamProxyError' or \
                       info == 'ClientRegion' or \
                       info == 'NetworkID' or \
                       info == 'Homepage' or \
+                      info == 'Tunnels' or \
+                      info == 'showUser' or \
+                      info == 'BuildInfo' or \
+                      info == 'SessionId' or \
                       info == 'ServerTimestamp' or \
-                      info == 'AvailableEgressRegions' or \
+                      info == 'LocalProxyError' or \
+                      info == 'CandidateServers' or \
+                      info == 'RequestingTactics' or \
+                      info == 'TotalBytesTransferred' or \
                       info == 'ClientUpgradeAvailable' or \
-                      info == 'ActiveAuthorizationIDs':
+                      info == 'ActiveAuthorizationIDs' or \
+                      info == 'ListeningSocksProxyPort' or \
+                      info == 'Info':
                         continue
 
                     else:

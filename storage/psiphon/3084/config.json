@@ -5,6 +5,7 @@
   "SponsorId": "0000000000000000",
 
   "UpstreamProxyURL": "http://127.0.0.1:8080",
+  "EmitDiagnosticNotices": true,
   "EmitBytesTransferred": true,
 
   "DisableLocalHTTPProxy": true,

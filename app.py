@@ -63,7 +63,7 @@ def main():
         with app.lock:
             sys.stdout.write('      \r')
             sys.stdout.flush()
-            app.log('Ctrl-C again to exit')
+            app.log('Ctrl-C again to exit    ')
 
 if __name__ == '__main__':
     main()
