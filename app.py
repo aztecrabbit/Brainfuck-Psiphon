@@ -6,6 +6,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', help='how many core running (min 1, max 16)', dest='core', type=int)
     parser.add_argument('-r', help='reset exported files (all, config, data, database)', dest='reset', type=str)
+    parser.add_argument('-f', help='frontend domains, example: akamai.net,akamai.net:443', dest='frontend_domains', type=str)
+    parser.add_argument('-w', help='whitelist requests, example: akamai.net,akamai.net:443', dest='whitelist_requests', type=str)
     arguments = parser.parse_args()
 
     app.banners()
@@ -31,6 +33,20 @@ def main():
     if config.force_use_redsocks and not config.user_is_superuser():
         app.log('Please run "sudo -s" first! (don\'t use "sudo python3 app.py"!)\n', color='[R1]')
         return
+
+    if arguments.whitelist_requests is not None:
+        config.whitelist_requests = app.process_to_host_port(arguments.whitelist_requests.split(','))
+        arguments.whitelist_requests = ''
+        for host_port in config.whitelist_requests:
+            arguments.whitelist_requests += ' {}:{},'.format(host_port[0], host_port[1])
+        app.log('Whitelist Requests is set by arguments: {}'.format(arguments.whitelist_requests.strip().rstrip(',')))
+
+    if arguments.frontend_domains is not None:
+        config.frontend_domains = app.process_to_host_port(arguments.frontend_domains.split(','))
+        arguments.frontend_domains = ''
+        for host_port in config.frontend_domains:
+            arguments.frontend_domains += ' {}:{},'.format(host_port[0], host_port[1])
+        app.log('Frontend Domains is set by arguments: {}'.format(arguments.frontend_domains.strip().rstrip(',')))
 
     app.log('SOCKS5 Proxy Rotator running on port {}'.format(config.proxyrotator_port))
     app.log('Domain Fronting running on port {}'.format(config.domainfronting_port))

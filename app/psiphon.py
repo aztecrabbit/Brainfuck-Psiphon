@@ -143,6 +143,8 @@ class psiphon(threading.Thread):
                       info == 'ServerTimestamp' or \
                       info == 'LocalProxyError' or \
                       info == 'CandidateServers' or \
+                      info == 'PruneServerEntry' or \
+                      info == 'RequestedTactics' or \
                       info == 'RequestingTactics' or \
                       info == 'TotalBytesTransferred' or \
                       info == 'ClientUpgradeAvailable' or \
