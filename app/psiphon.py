@@ -50,9 +50,9 @@ class psiphon(threading.Thread):
         return True
 
     def run(self):
-        time.sleep(2.500)
-        if len(psiphon_stop) >= 1: return        
         self.log('Connecting')
+        time.sleep(2.500)
+        if len(psiphon_stop) >= 1: return
         while True:
             try:
                 self.connected = 0
@@ -84,12 +84,6 @@ class psiphon(threading.Thread):
                         self.kuota_data[line['data']['diagnosticID']] = 0
                         if self.connected == self.tunnels:
                             self.log('Connected' + ' ' * 16, color='[Y1]')
-
-                    elif info == 'ConnectingServer':
-                        continue
-
-                    elif info == 'ConnectedServer':
-                        continue
 
                     elif info == 'Alert':
                         message = line['data']['message']
@@ -131,30 +125,37 @@ class psiphon(threading.Thread):
                             self.reconnecting_color = '[R1]'
                             break
 
+                        else:
+                            self.log(line, color='[R1]')
+
+                    '''
                     elif info == 'AvailableEgressRegions' or \
                       info == 'UpstreamProxyError' or \
                       info == 'ClientRegion' or \
                       info == 'NetworkID' or \
                       info == 'Homepage' or \
                       info == 'Tunnels' or \
+                      info == 'Exiting' or \
                       info == 'showUser' or \
                       info == 'BuildInfo' or \
                       info == 'SessionId' or \
+                      info == 'LivenessTest' or \
+                      info == 'ConnectedServer' or \
                       info == 'ServerTimestamp' or \
                       info == 'LocalProxyError' or \
                       info == 'CandidateServers' or \
+                      info == 'ConnectingServer' or \
                       info == 'PruneServerEntry' or \
                       info == 'RequestedTactics' or \
                       info == 'RequestingTactics' or \
                       info == 'TotalBytesTransferred' or \
                       info == 'ClientUpgradeAvailable' or \
+                      info == 'EstablishTunnelTimeout' or \
                       info == 'ActiveAuthorizationIDs' or \
                       info == 'ListeningSocksProxyPort' or \
                       info == 'Info':
                         continue
-
-                    else:
-                        self.log(line, color='[R1]')
+                    '''
             except json.decoder.JSONDecodeError:
                 self.force_stop = True
                 self.log(line.decode().strip(), color='[R1]')

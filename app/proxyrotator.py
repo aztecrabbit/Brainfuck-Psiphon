@@ -2,7 +2,6 @@ import socks
 import socket
 import select
 import struct
-import random
 import threading
 import socketserver
 from .log import log
@@ -116,9 +115,12 @@ class proxyrotator_handler(socketserver.StreamRequestHandler):
         port = struct.unpack('!H', self.rfile.read(2))[0]
         data = self.generate_failed_reply(host_type, 5)
 
-        random.shuffle(self.server.proxies)
-
-        for proxy in self.server.proxies:
+        i = 0
+        while i < len(proxies):
+            i += 1
+            with lock:
+                proxy = proxies.pop(0)
+                proxies.append(proxy)
             try:
                 if cmd == 1:
                     socket_server = socks.socksocket()
@@ -165,7 +167,6 @@ class proxyrotator(threading.Thread):
             server.buffer_size = self.buffer_size
             server.username = 'aztecrabbit'
             server.password = 'aztecrabbit'
-            server.proxies = proxies
             server.serve_forever()
         except OSError:
             self.log('Port {} used by another programs'.format(self.proxy_rotator_port), color='[R1]')
