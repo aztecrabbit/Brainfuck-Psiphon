@@ -42,12 +42,6 @@ class config(object):
     def user_is_superuser(self):
         return True if os.getuid() == 0 else False
 
-    def is_redsocks_enabled(self):
-        return True if self.system_machine in self.system_machine_using_redsocks or self.force_use_redsocks else False
-
-    def is_multi_tunnel_enabled(self):
-        return True if self.system_machine in self.system_machine_using_multi_tunnel or self.force_use_multi_tunnel else False
-
     def load_config(self):
         while True:
             try:
@@ -65,6 +59,9 @@ class config(object):
                 self.reset('config')
                 self.log('Resetting Config to Default Settings Complete\n')
             else: break
+
+        self.redsocks_enabled = True if self.system_machine in self.system_machine_using_redsocks or self.force_use_redsocks else False
+        self.multi_tunnel_enabled = True if self.system_machine in self.system_machine_using_multi_tunnel or self.force_use_multi_tunnel else False
 
         self.frontend_domains = process_to_host_port(open(real_path(self.files_config['frontend-domains'][1])).readlines())
         self.whitelist_requests = process_to_host_port(open(real_path(self.files_config['whitelist-requests'][1])).readlines())

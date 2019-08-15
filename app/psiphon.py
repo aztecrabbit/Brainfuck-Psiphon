@@ -18,7 +18,6 @@ class psiphon(threading.Thread):
         self.tunnels = 2 if self.multi_tunnel_enabled else 1
         self.kuota_data = {}
         self.kuota_data_all = 0
-        self.kuota_data_limit_count = 0
         self.force_stop = False
 
         self.daemon = True
@@ -42,10 +41,7 @@ class psiphon(threading.Thread):
         for x in self.kuota_data:
             if self.kuota_data_limit > 0 and self.kuota_data[x] >= self.kuota_data_limit:
                 if sent == 0 and received <= 20000:
-                    self.kuota_data_limit_count += 1
-
-        if self.kuota_data_limit_count >= 3:
-            return False
+                    return False
 
         return True
 
@@ -59,7 +55,6 @@ class psiphon(threading.Thread):
                 self.kuota_data = {}
                 self.kuota_data_all = 0
                 self.reconnecting_color = '[G1]'
-                self.kuota_data_limit_count = 0
                 process = subprocess.Popen(self.command.split(' '), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                 for line in process.stdout:
                     if len(psiphon_stop) >= 1:
@@ -74,10 +69,9 @@ class psiphon(threading.Thread):
                         if not self.check_kuota_data(id, sent, received):
                             break
                         ids = ''
-                        if self.multi_tunnel_enabled:
-                            for x in self.kuota_data:
-                                ids += '({}) '.format(self.size(self.kuota_data[x]))
-                        self.log_replace('{} ({}) {}'.format(self.port, self.size(self.kuota_data_all), ids))
+                        for x in self.kuota_data:
+                            ids += '({}) '.format(self.size(self.kuota_data[x]))
+                        self.log_replace('{} {}'.format(self.port, ids))
 
                     elif info == 'ActiveTunnel':
                         self.connected += 1
@@ -92,7 +86,7 @@ class psiphon(threading.Thread):
                             self.log('SOCKS proxy accept error ({})'.format('connected' if self.connected else 'disconnected'), color='[R1]')
 
                         elif 'meek round trip failed' in message:
-                            if self.connected == 2:
+                            if self.connected == self.tunnels:
                                 self.reconnecting_color = '[R1]'
                                 break
 

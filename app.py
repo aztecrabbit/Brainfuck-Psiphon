@@ -4,6 +4,7 @@ import argparse
 
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument('-t', help='enable multi tunnel', dest='multi_tunnel_enabled', action='store_true')
     parser.add_argument('-c', help='how many core running (min 1, max 16)', dest='core', type=int)
     parser.add_argument('-r', help='reset exported files (all, config, data, database)', dest='reset', type=str)
     parser.add_argument('-f', help='frontend domains, example: akamai.net,akamai.net:443', dest='frontend_domains', type=str)
@@ -34,6 +35,9 @@ def main():
         app.log('Please run "sudo -s" first! (don\'t use "sudo python3 app.py"!)\n', color='[R1]')
         return
 
+    if arguments.multi_tunnel_enabled:
+        config.multi_tunnel_enabled = True
+
     if arguments.whitelist_requests is not None:
         config.whitelist_requests = app.process_to_host_port(arguments.whitelist_requests.split(','))
         arguments.whitelist_requests = ''
@@ -53,15 +57,15 @@ def main():
 
     app.proxyrotator(('0.0.0.0', config.proxyrotator_port), buffer_size=65535).start()
 
-    redsocks = app.redsocks(config.is_redsocks_enabled())
+    redsocks = app.redsocks(config.redsocks_enabled)
     redsocks.start()
     
     for i in range(int(arguments.core if arguments.core is not None and arguments.core > 0 and arguments.core <= 16 else config.core)):
         port = 3081 + i
         app.proxies.append(['127.0.0.1', port])
         app.psiphon(
-            '{} -config storage/psiphon/{}/{}'.format(app.real_path(config.files_psiphon_tunnel_core[config.system_machine][1]), port, 'config-multi-tunnel.json' if config.is_multi_tunnel_enabled() else 'config.json'),
-            port, config.kuota_data_limit, config.is_multi_tunnel_enabled()
+            '{} -config storage/psiphon/{}/{}'.format(app.real_path(config.files_psiphon_tunnel_core[config.system_machine][1]), port, 'config-multi-tunnel.json' if config.multi_tunnel_enabled else 'config.json'),
+            port, config.kuota_data_limit, config.multi_tunnel_enabled
         ).start()
 
     try:
