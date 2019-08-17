@@ -42,18 +42,18 @@ redsocks {
 
         commands = \
         '''
-sudo redsocks
-sudo iptables -t nat -N REDSOCKS
-sudo iptables -t nat -A REDSOCKS -d 0.0.0.0/8 -j RETURN
-sudo iptables -t nat -A REDSOCKS -d 10.0.0.0/8 -j RETURN
-sudo iptables -t nat -A REDSOCKS -d 127.0.0.0/8 -j RETURN
-sudo iptables -t nat -A REDSOCKS -d 169.254.0.0/16 -j RETURN
-sudo iptables -t nat -A REDSOCKS -d 172.16.0.0/12 -j RETURN
-sudo iptables -t nat -A REDSOCKS -d 192.168.0.0/16 -j RETURN
-sudo iptables -t nat -A REDSOCKS -d 224.0.0.0/4 -j RETURN
-sudo iptables -t nat -A REDSOCKS -d 240.0.0.0/4 -j RETURN
-sudo iptables -t nat -A REDSOCKS -p tcp -j REDIRECT --to-ports 3070
-sudo iptables -t nat -A OUTPUT -p tcp -j REDSOCKS
+redsocks
+iptables -t nat -N REDSOCKS
+iptables -t nat -A REDSOCKS -d 0.0.0.0/8 -j RETURN
+iptables -t nat -A REDSOCKS -d 10.0.0.0/8 -j RETURN
+iptables -t nat -A REDSOCKS -d 127.0.0.0/8 -j RETURN
+iptables -t nat -A REDSOCKS -d 169.254.0.0/16 -j RETURN
+iptables -t nat -A REDSOCKS -d 172.16.0.0/12 -j RETURN
+iptables -t nat -A REDSOCKS -d 192.168.0.0/16 -j RETURN
+iptables -t nat -A REDSOCKS -d 224.0.0.0/4 -j RETURN
+iptables -t nat -A REDSOCKS -d 240.0.0.0/4 -j RETURN
+iptables -t nat -A REDSOCKS -p tcp -j REDIRECT --to-ports 3070
+iptables -t nat -A OUTPUT -p tcp -j REDSOCKS
         '''.strip().replace('\r', '').replace('\n', ';').split(';')
 
         self.stop()
@@ -71,13 +71,13 @@ sudo iptables -t nat -A OUTPUT -p tcp -j REDSOCKS
 
         commands = \
         '''
-sudo iptables -F
-sudo iptables -X 
-sudo iptables -Z
-sudo iptables -t nat -F
-sudo iptables -t nat -X
-sudo iptables -t nat -Z
-sudo killall redsocks
+iptables -F
+iptables -X 
+iptables -Z
+iptables -t nat -F
+iptables -t nat -X
+iptables -t nat -Z
+killall redsocks
         '''.strip().replace('\r', '').replace('\n', ';').split(';')
 
         for command in commands:
@@ -88,9 +88,9 @@ sudo killall redsocks
         if self._stop: return
         if len(hostname) == 0: return
         with lock:
-            command = 'sudo iptables -t nat -C REDSOCKS -d {} -j RETURN'.format(hostname)
+            command = 'iptables -t nat -C REDSOCKS -d {} -j RETURN'.format(hostname)
             process = subprocess.Popen(command.split(' '), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             for line in process.stdout:
-                command = 'sudo iptables -t nat -I REDSOCKS -d {} -j RETURN'.format(hostname)
+                command = 'iptables -t nat -I REDSOCKS -d {} -j RETURN'.format(hostname)
                 process = subprocess.Popen(command.split(' '), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                 process.communicate()

@@ -22,7 +22,7 @@ def log(value, status='INFO', color='[G1]'):
     with lock: print(value)
 
 def log_replace(value, color='[G1]'):
-    value = colors('{}{}        \r'.format(color, value))
+    value = colors('{}{}            \r'.format(color, value))
     with lock:
         sys.stdout.write(value)
         sys.stdout.flush()

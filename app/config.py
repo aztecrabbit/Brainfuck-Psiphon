@@ -20,6 +20,7 @@ class config(object):
         ]
         self.files_psiphon_tunnel_core = {
             'linux-x86_64': ['/data/psiphon-tunnel-core/linux-x86_64', '/../storage/psiphon/psiphon-tunnel-core'],
+            'linux-armv7l': ['/data/psiphon-tunnel-core/linux-armv7l', '/../storage/psiphon/psiphon-tunnel-core'],
             'linux-armv8l': ['/data/psiphon-tunnel-core/linux-armv8l', '/../storage/psiphon/psiphon-tunnel-core'],
             'linux-aarch64': ['/data/psiphon-tunnel-core/linux-aarch64', '/../storage/psiphon/psiphon-tunnel-core'],
         }
