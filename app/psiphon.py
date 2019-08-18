@@ -7,12 +7,13 @@ from .important import *
 from .log import log, log_replace
 
 class psiphon(threading.Thread):
-    def __init__(self, command, port, kuota_data_limit, multi_tunnel_enabled):
+    def __init__(self, command, port, kuota_data_limit, multi_tunnel_enabled, verbose):
         super(psiphon, self).__init__()
 
         self.multi_tunnel_enabled = multi_tunnel_enabled
         self.kuota_data_limit = kuota_data_limit
         self.command = command
+        self.verbose = verbose
         self.port = port
 
         self.tunnels = 2 if self.multi_tunnel_enabled else 1
@@ -73,9 +74,15 @@ class psiphon(threading.Thread):
                             ids += '({}) '.format(self.size(self.kuota_data[x]))
                         self.log_replace('{} {}'.format(self.port, ids))
 
+                    elif info == 'ConnectingServer':
+                        if self.verbose:
+                            self.log(f"{line['data']['diagnosticID']}: {line['data']['region']} {line['data']['protocol']}")
+
                     elif info == 'ActiveTunnel':
                         self.connected += 1
                         self.kuota_data[line['data']['diagnosticID']] = 0
+                        if self.verbose: 
+                            self.log(f"{line['data']['protocol']}", color='[Y1]')
                         if self.connected == self.tunnels:
                             self.log('Connected' + ' ' * 16, color='[Y1]')
 
@@ -87,8 +94,19 @@ class psiphon(threading.Thread):
 
                         elif 'meek round trip failed' in message:
                             if self.connected == self.tunnels:
-                                self.reconnecting_color = '[R1]'
-                                break
+                                if message == 'meek round trip failed: context deadline exceeded' or \
+                                   message == 'meek round trip failed: EOF':
+                                    # ~
+                                    self.reconnecting_color = '[R1]'
+                                    break
+                                else:
+                                    self.log(f'001: {message}', color='[P1]')
+
+                        elif 'psiphon.(*Tunnel).Activate' in message:
+                            if self.connected < self.tunnels:
+                                continue
+                            else:
+                                self.log(f'003: {message}', color='[R1]')
 
                         elif 'A connection attempt failed because the connected party did not properly respond after a period of time' in message or \
                          'context canceled' in message or \
@@ -108,14 +126,16 @@ class psiphon(threading.Thread):
                          'no such host' in message:
                             continue
 
-                        elif 'psiphon.(*Tunnel).sendSshKeepAlive' in message or \
-                         'meek read payload failed' in message or \
+                        elif 'psiphon.(*Tunnel).sendSshKeepAlive' in message:
+                            # ~
+                            self.reconnecting_color = '[R1]'
+                            break
+
+                        elif 'meek read payload failed' in message or \
                          'underlying conn is closed' in message or \
-                         'psiphon.(*Tunnel).Activate' in message or \
-                         'psiphon.(*Tunnel).SendAPIRequest' in message or \
                          'No address associated with hostname' in message or \
-                         'controller shutdown due to component failure' in message or \
-                         'tunnel failed:' in message:
+                         'controller shutdown due to component failure' in message:
+                            self.log(f"007: {message}", color='[R1]')
                             self.reconnecting_color = '[R1]'
                             break
 

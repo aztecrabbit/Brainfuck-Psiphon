@@ -4,6 +4,7 @@ import argparse
 
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument('-v', help='increase output verbosity', dest='verbose', action='store_true')
     parser.add_argument('-t', help='enable multi tunnel', dest='multi_tunnel_enabled', action='store_true')
     parser.add_argument('-c', help='how many core running (min 1, max 16)', dest='core', type=int)
     parser.add_argument('-r', help='reset exported files (all, config, data, database)', dest='reset', type=str)
@@ -65,7 +66,7 @@ def main():
         app.proxies.append(['127.0.0.1', port])
         app.psiphon(
             '{} -config storage/psiphon/{}/{}'.format(app.real_path(config.files_psiphon_tunnel_core[config.system_machine][1]), port, 'config-multi-tunnel.json' if config.multi_tunnel_enabled else 'config.json'),
-            port, config.kuota_data_limit, config.multi_tunnel_enabled
+            port, config.kuota_data_limit, config.multi_tunnel_enabled, arguments.verbose
         ).start()
 
     try:
