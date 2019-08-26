@@ -47,8 +47,9 @@ class psiphon(threading.Thread):
         return True
 
     def run(self):
+        time.sleep(1.000)
         self.log('Connecting')
-        time.sleep(2.500)
+        time.sleep(1.500)
         if len(psiphon_stop) >= 1: return
         while True:
             try:
@@ -94,19 +95,15 @@ class psiphon(threading.Thread):
 
                         elif 'meek round trip failed' in message:
                             if self.connected == self.tunnels:
-                                if message == 'meek round trip failed: context deadline exceeded' or \
-                                   message == 'meek round trip failed: EOF':
+                                if message == 'meek round trip failed: remote error: tls: bad record MAC' or \
+                                   message == 'meek round trip failed: context deadline exceeded' or \
+                                   message == 'meek round trip failed: EOF' or \
+                                   'psiphon.CustomTLSDial' in message:
                                     # ~
                                     self.reconnecting_color = '[R1]'
                                     break
                                 else:
-                                    self.log(f'001: {message}', color='[P1]')
-
-                        elif 'psiphon.(*Tunnel).Activate' in message:
-                            if self.connected < self.tunnels:
-                                continue
-                            else:
-                                self.log(f'003: {message}', color='[R1]')
+                                    self.log(f'001: \n\n{line}\n', color='[P1]')
 
                         elif 'A connection attempt failed because the connected party did not properly respond after a period of time' in message or \
                          'context canceled' in message or \
@@ -122,22 +119,27 @@ class psiphon(threading.Thread):
                          'response status: 403 Forbidden' in message or \
                          'making proxy request: unexpected EOF' in message or \
                          'tunnel.dialTunnel: dialConn is not a Closer' in message or \
+                         'psiphon.(*ServerContext).DoConnectedRequest' in message or \
                          'No connection could be made because the target machine actively refused it.' in message or \
                          'no such host' in message:
                             continue
 
-                        elif 'psiphon.(*Tunnel).sendSshKeepAlive' in message:
+                        elif 'controller shutdown due to component failure' in message or \
+                          'psiphon.(*ServerContext).DoStatusRequest' in message or \
+                          'psiphon.(*Tunnel).sendSshKeepAlive' in message or \
+                          'psiphon.(*MeekConn).readPayload' in message or \
+                          'psiphon.(*Tunnel).Activate' in message or \
+                          'underlying conn is closed' in message or \
+                          'tunnel failed:' in message:
                             # ~
                             self.reconnecting_color = '[R1]'
                             break
 
-                        elif 'meek read payload failed' in message or \
-                         'underlying conn is closed' in message or \
-                         'No address associated with hostname' in message or \
-                         'controller shutdown due to component failure' in message:
-                            self.log(f"007: {message}", color='[R1]')
-                            self.reconnecting_color = '[R1]'
-                            break
+                        elif 'controller shutdown due to component failure' in message or \
+                          'No address associated with hostname' in message:
+                            self.log(f"007:\n\n{line}\n", color='[R1]')
+                            # self.reconnecting_color = '[R1]'
+                            # break
 
                         else:
                             self.log(line, color='[R1]')
