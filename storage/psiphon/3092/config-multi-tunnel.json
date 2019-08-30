@@ -4,7 +4,7 @@
   "PropagationChannelId": "0000000000000000",
   "SponsorId": "0000000000000000",
 
-  "UpstreamProxyURL": "http://127.0.0.1:8080",
+  "UpstreamProxyURL": "http://127.0.0.1:8989",
   "EmitDiagnosticNotices": true,
   "EmitBytesTransferred": true,
 
