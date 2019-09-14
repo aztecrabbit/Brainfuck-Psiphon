@@ -63,7 +63,6 @@ def main():
     
     for i in range(int(arguments.core if arguments.core is not None and arguments.core > 0 and arguments.core <= 16 else config.core)):
         port = 3081 + i
-        app.proxies.append(['127.0.0.1', port])
         app.psiphon(
             '{} -config storage/psiphon/{}/{}'.format(app.real_path(config.files_psiphon_tunnel_core[config.system_machine][1]), port, 'config-multi-tunnel.json' if config.multi_tunnel_enabled else 'config.json'),
             port, config.kuota_data_limit, config.multi_tunnel_enabled, arguments.verbose

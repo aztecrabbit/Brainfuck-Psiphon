@@ -85,6 +85,8 @@ class psiphon(threading.Thread):
                         if self.verbose: 
                             self.log(f"{line['data']['protocol']}", color='[Y1]')
                         if self.connected == self.tunnels:
+                            with lock:
+                               proxies.append(['127.0.0.1', self.port])
                             self.log('Connected' + ' ' * 16, color='[Y1]')
 
                     elif info == 'Alert':
@@ -130,6 +132,7 @@ class psiphon(threading.Thread):
                           'psiphon.(*MeekConn).readPayload' in message or \
                           'psiphon.(*Tunnel).Activate' in message or \
                           'underlying conn is closed' in message or \
+                          'duplicate tunnel:' in message or \
                           'tunnel failed:' in message:
                             # ~
                             self.reconnecting_color = '[R1]'
@@ -184,6 +187,9 @@ class psiphon(threading.Thread):
                 if self.force_stop:
                     process.kill()
                     return
+                with lock:
+                    if ['127.0.0.1', self.port] in proxies:
+                        proxies.remove(['127.0.0.1', self.port])
                 try:
                     process.kill()
                     if self.connected:
